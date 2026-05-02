@@ -1,16 +1,16 @@
-from langchin_community.document_loaders import PyPDFLoader
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_community.document_loaders import PyPDFLoader
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_huggingface import HuggingFaceEmbeddings
-from langchain_community.vectors import FAISS
+from langchain_community.vectorstores import FAISS
 from langchain_anthropic import ChatAnthropic
-from langchain.prompts import PromptTemplate
-from langchain.chains import create_retrieval_chain
-from langchain.chains.combine_documents import create_stuff_document_chain
+from langchain_core.prompts import PromptTemplate
+from langchain_classic.chains import create_retrieval_chain
+from langchain_classic.chains.combine_documents import create_stuff_documents_chain
 from dotenv import load_dotenv
 import os
 load_dotenv()
 # loading
-loader = PyPDFLoader("Documents\Analysis1.pdf")
+loader = PyPDFLoader("Documents\\Analysis1.pdf")
 documents = loader.load()
 # chunking
 splitter = RecursiveCharacterTextSplitter(chunk_size=1024,chunk_overlap=256)
@@ -18,7 +18,7 @@ chunks = splitter.split_documents(documents)
 # embeddings
 embeddings = HuggingFaceEmbeddings(model_name = "sentence-transformers/all-MiniLM-L6-v2")
 # using FAISS to keep the vectorDB simple for this implementation
-vectordb = FAISS.from_documents(documents=chunks,embeddings=embeddings)
+vectordb = FAISS.from_documents(documents=chunks,embedding=embeddings)
 #retriever
 retriever = vectordb.as_retriever()
 # api of claude
@@ -28,6 +28,6 @@ prompt = PromptTemplate(input_variables=["context","input"],template="""You are 
 # LLM
 llm = ChatAnthropic(model="claude-haiku-4-5-20251001",temperature=0,anthropic_api_key=api_key)
 # document chain - feed the chunk (retrieved) and query to llm
-document_chain = create_stuff_document_chain(llm, prompt)
+document_chain = create_stuff_documents_chain(llm, prompt)
 # the retriever chain
-retriever_chain = create_retrieval_chain(retriever, document_chain)
+retrieval_chain = create_retrieval_chain(retriever, document_chain)
